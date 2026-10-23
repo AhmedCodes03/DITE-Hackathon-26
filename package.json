@@ -1,0 +1,48 @@
+{
+  "name": "doctor-appointment-system",
+  "private": true,
+  "version": "1.0.0",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "npm-run-all --parallel dev:web dev:api",
+    "dev:web": "npm --workspace apps/web run dev",
+    "dev:api": "npm --workspace apps/api run dev",
+    "build": "npm-run-all build:web build:api",
+    "build:web": "npm --workspace apps/web run build",
+    "build:api": "npm --workspace apps/api run build",
+    "lint": "npm-run-all lint:web lint:api",
+    "format:web": "npm --workspace apps/web run format",
+    "lint:web": "npm --workspace apps/web run lint",
+    "lint:api": "npm --workspace apps/api run lint",
+    "test": "npm-run-all test:web test:api",
+    "test:web": "npm --workspace apps/web run test",
+    "test:api": "npm --workspace apps/api run test"
+  },
+  "devDependencies": {
+    "npm-run-all": "^4.1.5"
+  },
+  "dependencies": {
+    "@21st-sdk/agent": "^0.0.16",
+    "zod": "^4.3.6"
+  },
+  "overrides": {
+    "path-to-regexp": "0.1.13",
+    "brace-expansion": "2.0.3",
+    "follow-redirects": "1.16.0",
+    "tinyglobby": {
+      "picomatch": "4.0.4"
+    },
+    "micromatch": {
+      "picomatch": "2.3.2"
+    },
+    "anymatch": {
+      "picomatch": "2.3.2"
+    },
+    "readdirp": {
+      "picomatch": "2.3.2"
+    }
+  }
+}
