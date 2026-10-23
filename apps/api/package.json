@@ -1,0 +1,48 @@
+{
+  "name": "@doctor-system/api",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "node --watch src/server.js",
+    "start": "node src/server.js",
+    "build": "echo \"No build step required for Node runtime\"",
+    "lint": "eslint src --ext .js,.mjs",
+    "test": "node --experimental-vm-modules ../../node_modules/jest/bin/jest.js --config jest.config.mjs",
+    "test:watch": "node --experimental-vm-modules ../../node_modules/jest/bin/jest.js --config jest.config.mjs --watch",
+    "test:coverage": "node --experimental-vm-modules ../../node_modules/jest/bin/jest.js --config jest.config.mjs --coverage",
+    "seed:admin": "node src/seeds/seedAdminAndDoctor.js",
+    "seed:data": "node src/seeds/seedPatientAndAvailability.js",
+    "seed:doctors": "node src/seeds/seedDoctors.js",
+    "seed:all": "npm run seed:admin && npm run seed:data && npm run seed:doctors"
+  },
+  "dependencies": {
+    "@sentry/node": "^8.55.0",
+    "bcryptjs": "^2.4.3",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.21.2",
+    "express-rate-limit": "^8.3.2",
+    "helmet": "^8.0.0",
+    "jsonwebtoken": "^9.0.2",
+    "mongoose": "^8.8.0",
+    "morgan": "^1.10.0",
+    "swagger-jsdoc": "^6.2.8",
+    "swagger-ui-express": "^5.0.1",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.29.0",
+    "@babel/preset-env": "^7.29.2",
+    "@eslint/js": "^9.24.0",
+    "@types/jest": "^30.0.0",
+    "babel-jest": "^30.3.0",
+    "eslint": "^9.24.0",
+    "jest": "^30.3.0",
+    "supertest": "^7.2.2"
+  },
+  "overrides": {
+    "path-to-regexp": "0.1.13",
+    "brace-expansion": "2.0.3"
+  }
+}

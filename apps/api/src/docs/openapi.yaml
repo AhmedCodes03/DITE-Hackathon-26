@@ -1,0 +1,31 @@
+openapi: 3.0.3
+info:
+  title: Dr. XYZ Appointment API
+  version: 1.0.0
+servers:
+  - url: http://localhost:5000
+paths:
+  /health:
+    get:
+      summary: Health check
+      responses:
+        "200":
+          description: API is healthy
+  /api/v1/auth/register:
+    post:
+      summary: Register patient account
+      responses:
+        "200":
+          description: Registered successfully
+  /api/v1/doctor-profile:
+    get:
+      summary: Get doctor profile (public)
+      responses:
+        "200":
+          description: Doctor profile returned
+  /api/v1/availability/slots:
+    get:
+      summary: Get generated slots for date
+      responses:
+        "200":
+          description: Slots returned
