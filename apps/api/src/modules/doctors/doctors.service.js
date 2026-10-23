@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import User from "../../models/user.model.js";
 import DoctorProfile from "../../models/doctorProfile.model.js";
 import Availability from "../../models/availability.model.js";
 import Appointment from "../../models/appointment.model.js";
@@ -196,44 +197,81 @@ const DEFAULT_VERIFIED_DOCTORS = [
 ];
 
 export async function ensureInitialDoctors() {
-  const approvedCount = await DoctorProfile.countDocuments({ status: "approved" });
-  if (approvedCount >= 4) return;
-
   for (const doc of DEFAULT_VERIFIED_DOCTORS) {
-    const existing = await DoctorProfile.findOne({ doctorName: doc.doctorName });
-    let docProfileId = existing?._id;
-
-    if (!existing) {
-      const { availability, ...profileData } = doc;
-      const created = await DoctorProfile.create(profileData);
-      docProfileId = created._id;
-    } else {
-      await DoctorProfile.updateOne(
-        { _id: existing._id },
-        {
-          $set: {
-            status: "approved",
-            isAvailable: true,
-            bookingEnabled: true,
-            consultationFee: doc.consultationFee,
-            specialty: doc.specialty,
-            clinicName: doc.clinicName,
-            clinicAddress: doc.clinicAddress,
-            photoUrl: doc.photoUrl
-          }
-        }
-      );
-    }
-
-    if (doc.availability && docProfileId) {
-      for (const slot of doc.availability) {
-        const hasSlot = await Availability.findOne({ doctorId: docProfileId, dayOfWeek: slot.dayOfWeek });
-        if (!hasSlot) {
-          try {
-            await Availability.create({ ...slot, doctorId: docProfileId });
-          } catch {}
+    try {
+      const email = doc.contactEmail ? doc.contactEmail.toLowerCase() : "";
+      let user = null;
+      if (email) {
+        user = await User.findOne({ email });
+        if (!user) {
+          user = await User.create({
+            fullName: doc.doctorName,
+            email,
+            passwordHash: "Doctor123", // automatically hashed by userSchema pre-save
+            phone: doc.contactPhone || "+92 300 0000000",
+            role: "doctor",
+            isActive: true,
+            isBlocked: false
+          });
+        } else if (user.role !== "doctor") {
+          await User.updateOne({ _id: user._id }, { $set: { role: "doctor", isBlocked: false, isActive: true } });
         }
       }
+
+      const existing = await DoctorProfile.findOne({
+        $or: [
+          { doctorName: doc.doctorName },
+          ...(email ? [{ contactEmail: email }] : []),
+          ...(user ? [{ userId: user._id }] : [])
+        ]
+      });
+
+      let docProfileId = existing?._id;
+
+      if (!existing) {
+        const { availability, ...profileData } = doc;
+        const created = await DoctorProfile.create({
+          ...profileData,
+          userId: user?._id || null,
+          contactEmail: email,
+          status: doc.status || "approved",
+          bookingEnabled: true,
+          isAvailable: true
+        });
+        docProfileId = created._id;
+      } else {
+        await DoctorProfile.updateOne(
+          { _id: existing._id },
+          {
+            $set: {
+              userId: existing.userId || user?._id || null,
+              status: existing.status || doc.status || "approved",
+              isAvailable: true,
+              bookingEnabled: true,
+              consultationFee: existing.consultationFee || doc.consultationFee,
+              specialty: existing.specialty || doc.specialty,
+              clinicName: existing.clinicName || doc.clinicName,
+              clinicAddress: existing.clinicAddress || doc.clinicAddress,
+              photoUrl: existing.photoUrl || doc.photoUrl,
+              contactEmail: email,
+              contactPhone: doc.contactPhone
+            }
+          }
+        );
+      }
+
+      if (doc.availability && docProfileId) {
+        for (const slot of doc.availability) {
+          const hasSlot = await Availability.findOne({ doctorId: docProfileId, dayOfWeek: slot.dayOfWeek });
+          if (!hasSlot) {
+            try {
+              await Availability.create({ ...slot, doctorId: docProfileId });
+            } catch {}
+          }
+        }
+      }
+    } catch (err) {
+      console.warn("Failed ensuring doctor profile:", doc.doctorName, err.message);
     }
   }
 }

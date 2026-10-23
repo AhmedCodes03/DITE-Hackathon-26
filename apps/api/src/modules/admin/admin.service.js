@@ -4,6 +4,7 @@ import PatientProfile from "../../models/patientProfile.model.js";
 import DoctorProfile from "../../models/doctorProfile.model.js";
 import Appointment from "../../models/appointment.model.js";
 import { ApiError } from "../../utils/ApiError.js";
+import { ensureInitialDoctors } from "../doctors/doctors.service.js";
 
 export async function getDashboardTrends(range = 7) {
   const days = range === 30 ? 30 : 7;
@@ -292,7 +293,9 @@ export async function getAdminAppointments(options = {}) {
 export async function getAllDoctors(options = {}) {
   const { page = 1, limit = 20, status, search } = options;
 
-  const query = { userId: { $ne: null } }; // only registered doctor accounts
+  await ensureInitialDoctors().catch(() => {});
+
+  const query = {};
   if (status) query.status = status;
   if (search) {
     query.$or = [
@@ -346,7 +349,10 @@ export async function blockDoctor(doctorProfileId) {
   const doctor = await DoctorProfile.findById(doctorProfileId).populate("userId");
   if (!doctor) throw new ApiError("Doctor not found", 404);
 
-  await User.findByIdAndUpdate(doctor.userId._id, { isBlocked: true });
+  const userId = doctor.userId?._id || doctor.userId;
+  if (userId) {
+    await User.findByIdAndUpdate(userId, { isBlocked: true });
+  }
   await DoctorProfile.findByIdAndUpdate(doctorProfileId, { bookingEnabled: false, isAvailable: false });
 
   return { doctorProfileId, isBlocked: true };
@@ -356,7 +362,10 @@ export async function unblockDoctor(doctorProfileId) {
   const doctor = await DoctorProfile.findById(doctorProfileId).populate("userId");
   if (!doctor) throw new ApiError("Doctor not found", 404);
 
-  await User.findByIdAndUpdate(doctor.userId._id, { isBlocked: false });
+  const userId = doctor.userId?._id || doctor.userId;
+  if (userId) {
+    await User.findByIdAndUpdate(userId, { isBlocked: false });
+  }
   if (doctor.status === "approved") {
     await DoctorProfile.findByIdAndUpdate(doctorProfileId, { bookingEnabled: true, isAvailable: true });
   }

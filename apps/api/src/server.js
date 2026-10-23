@@ -49,3 +49,5 @@ bootstrap().catch((error) => {
   process.exit(1);
 });
 // API server ready
+export { app };
+export default app;

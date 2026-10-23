@@ -6,6 +6,10 @@ export async function connectDatabase() {
     throw new Error("MONGO_URI is missing");
   }
 
+  if (mongoose.connection.readyState === 1 || mongoose.connection.readyState === 2) {
+    return;
+  }
+
   await mongoose.connect(env.mongoUri, {
     serverSelectionTimeoutMS: 20000,
     connectTimeoutMS: 20000,
